@@ -1,0 +1,72 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Watch all",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"dependsOrder": "parallel",
+			"dependsOn": [
+				"Watch server",
+				"Watch client"
+			]
+		},
+		{
+			"label": "Watch server",
+			"detail": "webpack - apps/server",
+			"type": "npm",
+			"script": "w",
+			"path": "apps/server",
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "Watch client",
+			"detail": "webpack - apps/client",
+			"type": "npm",
+			"script": "w",
+			"path": "apps/client",
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			],
+		},
+		{
+			"label": "Watch worker",
+			"detail": "webpack - worker db",
+			"type": "npm",
+			"script": "w",
+			"path": "dagda/worker-db",
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "Watch tests",
+			"detail": "webpack - tests",
+			"type": "npm",
+			"script": "w",
+			"path": "dagda/shared",
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "Watch test pg",
+			"detail": "webpack - test pg",
+			"type": "npm",
+			"script": "w",
+			"path": "dagda/tests/pg",
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+	]
+}

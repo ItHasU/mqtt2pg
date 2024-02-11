@@ -1,0 +1,19 @@
+{
+  "name": "mqtt2pg",
+  "version": "0.0.1",
+  "description": "Forward MQTT messages to PostgreSQL (Proof of Concept)",
+  "author": "Matthieu Aubry",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rimraf -g apps/*/dist **/.tsc-build",
+    "clean-all": "rimraf -g apps/*/dist **/.tsc-build **/node_modules"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.0",
+    "@types/pg": "^8.11.0"
+  },
+  "dependencies": {
+    "mqtt": "^5.3.5",
+    "pg": "^8.11.3"
+  }
+}
