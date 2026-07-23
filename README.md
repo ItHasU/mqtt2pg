@@ -15,7 +15,7 @@ MQTT broker  ──subscribe(MQTT_TOPICS)──▶  mqtt2pg  ──INSERT──�
 1. On startup the configuration is read from environment variables and
    **validated**; a missing variable stops the process immediately with a clear
    message (fail fast).
-2. It connects to PostgreSQL (verifying connectivity up front) and to the MQTT
+2. It connects to PostgreSQL (waiting for it to be reachable) and to the MQTT
    broker, then subscribes to every topic in `MQTT_TOPICS`.
 3. For each received message it stores one row in the `history` table:
    `(topic, payload)`.
@@ -31,7 +31,25 @@ The source lives in [`src/`](src/) and compiles to `dist/`:
 | --- | --- |
 | `src/config.ts` | Read & validate environment variables (`ConfigError` on failure) |
 | `src/payload.ts` | Normalise a raw message into valid JSON for the `jsonb` column |
+| `src/retry.ts` | Exponential-backoff retry helper used for reconnection |
 | `src/main.ts` | Wire MQTT ➜ PostgreSQL together |
+
+## Resilience & reconnection
+
+The service is designed to survive an outage of either dependency and resume on
+its own once the dependency is back — no restart required.
+
+- **MQTT broker down:** the client keeps reconnecting (every 2 s). On each
+  reconnect it re-subscribes to `MQTT_TOPICS`, so message flow resumes
+  automatically. The loss and the recovery are each logged once.
+- **PostgreSQL down at startup:** the service waits, retrying with exponential
+  backoff (1 s → 30 s), instead of crashing — handy when the database boots
+  after the service (e.g. in Compose).
+- **PostgreSQL down while running:** a connection pool transparently replaces
+  dropped connections, and each failing insert is retried with backoff. A
+  message received during a brief outage is still stored once the database
+  returns; only a prolonged outage (retries exhausted) drops a message, which is
+  logged. Recovery is logged as `PostgreSQL recovered; inserts resumed`.
 
 ## Configuration
 

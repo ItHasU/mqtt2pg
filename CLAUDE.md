@@ -10,7 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `src/config.ts` — reads and validates env vars; throws `ConfigError` (reported without a stack trace) when one is missing. Exports `loadConfig()` and `redactUrl()` (masks passwords before logging).
 - `src/payload.ts` — `toJsonPayload(raw)`: returns the raw message unchanged if it is already valid JSON, otherwise `JSON.stringify`s it so arbitrary text is stored as a valid JSON string. Pure and unit-tested.
-- `src/main.ts` — entry point: connects to PostgreSQL (a `pg` **Pool**, so concurrent inserts don't serialise on one connection), connects to MQTT, subscribes to `MQTT_TOPICS`, and inserts each message. Handles `SIGINT`/`SIGTERM` for graceful shutdown.
+- `src/retry.ts` — `backoffDelay()` (pure) and `retryWithBackoff()`: exponential-backoff retry used to wait for PostgreSQL at startup and to retry failing inserts. Unit-tested.
+- `src/main.ts` — entry point: connects to PostgreSQL (a `pg` **Pool**, so concurrent inserts don't serialise on one connection), connects to MQTT, subscribes to `MQTT_TOPICS`, and inserts each message. Handles `SIGINT`/`SIGTERM` for graceful shutdown. **Resilient to outages**: waits for PostgreSQL at startup, retries inserts with backoff, and relies on the MQTT client's auto-reconnect (re-subscribing on each reconnect); connection loss/recovery is logged. Tuning lives in the `*_RETRY` / `MQTT_RECONNECT_PERIOD_MS` constants at the top of the file.
 - `src/payload.test.ts` — Node built-in test runner (`node:test`), run directly on the `.ts` sources via Node's native TypeScript support (imports `./payload.ts`). Excluded from the tsc build (see `tsconfig.json`), so it is neither emitted to `dist/` nor shipped in the image.
 
 ## Commands
