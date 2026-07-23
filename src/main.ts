@@ -3,7 +3,7 @@ import { connect, type IClientOptions, type MqttClient } from 'mqtt';
 import { Pool } from 'pg';
 import { loadConfig, redactUrl, ConfigError } from './config.js';
 import { toJsonPayload } from './payload.js';
-import { retryWithBackoff } from './retry.js';
+import { retryWithBackoff, type RetryOptions } from './retry.js';
 
 const INSERT_QUERY = 'INSERT INTO history (topic, payload) VALUES ($1, $2)';
 
@@ -13,9 +13,9 @@ const INSERT_QUERY = 'INSERT INTO history (topic, payload) VALUES ($1, $2)';
 // aggressively we wait/retry so the service self-heals after an outage.
 const MQTT_RECONNECT_PERIOD_MS = 2_000;
 // Startup: keep waiting for the database (e.g. it boots after us in compose).
-const DB_STARTUP_RETRY = { retries: Infinity, minDelayMs: 1_000, maxDelayMs: 30_000, factor: 2 };
+const DB_STARTUP_RETRY: RetryOptions = { retries: Infinity, minDelayMs: 1_000, maxDelayMs: 30_000, factor: 2 };
 // Per-message insert: ride out brief blips, then drop to avoid unbounded memory.
-const DB_INSERT_RETRY = { retries: 6, minDelayMs: 500, maxDelayMs: 5_000, factor: 2 };
+const DB_INSERT_RETRY: RetryOptions = { retries: 6, minDelayMs: 500, maxDelayMs: 5_000, factor: 2 };
 
 function errorMessage(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
