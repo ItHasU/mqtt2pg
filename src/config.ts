@@ -36,13 +36,16 @@ function requireEnv(name: string): string {
 export function loadConfig(): AppConfig {
     const mqttUrl = requireEnv('MQTT_URL');
 
-    const mqttTopics = requireEnv('MQTT_TOPICS')
+    // MQTT_TOPICS is optional: when it is missing or resolves to an empty list,
+    // warn and fall back to '#' (subscribe to every topic) rather than failing.
+    const mqttTopics = (process.env.MQTT_TOPICS ?? '')
         .split(',')
         .map((topic) => topic.trim())
         .filter((topic) => topic.length > 0);
 
     if (mqttTopics.length === 0) {
-        throw new ConfigError('MQTT_TOPICS must contain at least one topic');
+        console.warn('MQTT_TOPICS is not set; falling back to "#" (all topics)');
+        mqttTopics.push('#');
     }
 
     const databaseUrl = requireEnv('DATABASE_URL');

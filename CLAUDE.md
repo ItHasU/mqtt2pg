@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `src/config.ts` — reads and validates env vars; throws `ConfigError` (reported without a stack trace) when one is missing. Exports `loadConfig()` and `redactUrl()` (masks passwords before logging).
 - `src/payload.ts` — `toJsonPayload(raw)`: returns the raw message unchanged if it is already valid JSON, otherwise `JSON.stringify`s it so arbitrary text is stored as a valid JSON string. Pure and unit-tested.
 - `src/main.ts` — entry point: connects to PostgreSQL (a `pg` **Pool**, so concurrent inserts don't serialise on one connection), connects to MQTT, subscribes to `MQTT_TOPICS`, and inserts each message. Handles `SIGINT`/`SIGTERM` for graceful shutdown.
-- `src/payload.test.ts` — Node built-in test runner (`node:test`), run against the compiled JS.
+- `src/payload.test.ts` — Node built-in test runner (`node:test`), run directly on the `.ts` sources via Node's native TypeScript support (imports `./payload.ts`). Excluded from the tsc build (see `tsconfig.json`), so it is neither emitted to `dist/` nor shipped in the image.
 
 ## Commands
 
@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm ci
 npm run build        # tsc -> dist/
 npm run typecheck    # tsc --noEmit
-npm test             # builds, then: node --test "dist/**/*.test.js"
+npm test             # node --test "src/**/*.test.ts"  (native TS, no build step)
 npm start            # node dist/main.js  (needs the env vars below)
 ```
 
@@ -31,7 +31,7 @@ TypeScript is on the **7.x** line and the config uses `module`/`moduleResolution
 - `MQTT_TOPICS` — comma-separated topics; MQTT wildcards (`+`, `#`) allowed
 - `DATABASE_URL` — PostgreSQL connection string (supports `sslmode`)
 
-All three are required; missing ones fail fast. The `history` table must already exist (see the DDL in `README.md`) — there are **no migrations** in the repo. `payload` is a `jsonb` column.
+`MQTT_URL` and `DATABASE_URL` are required and fail fast if missing; `MQTT_TOPICS` is optional and falls back to `#` (all topics) with a warning. The `history` table must already exist (see the DDL in `README.md`) — there are **no migrations** in the repo. `payload` is a `jsonb` column.
 
 ## Docker / CI
 

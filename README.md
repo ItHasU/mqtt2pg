@@ -41,7 +41,7 @@ when run via docker-compose or VS Code):
 | Variable | Required | Description |
 | --- | --- | --- |
 | `MQTT_URL` | yes | Broker URL. Use `mqtts://…` for TLS. Example: `mqtt://broker:1883` |
-| `MQTT_TOPICS` | yes | Comma-separated topics to subscribe to. MQTT wildcards (`+`, `#`) are supported, e.g. `sensors/#,home/+/temp` |
+| `MQTT_TOPICS` | no | Comma-separated topics to subscribe to. MQTT wildcards (`+`, `#`) are supported, e.g. `sensors/#,home/+/temp`. If unset, the service logs a warning and falls back to `#` (all topics) |
 | `DATABASE_URL` | yes | PostgreSQL connection string. Append `?sslmode=require` to force TLS. Example: `postgres://user:pass@db:5432/metrics` |
 
 Example `.env`:
@@ -106,7 +106,7 @@ MQTT_URL=… MQTT_TOPICS=… DATABASE_URL=… npm start
 | `npm start` | Run the compiled app (`dist/main.js`) |
 | `npm run dev` | Compile in watch mode |
 | `npm run typecheck` | Type-check without emitting |
-| `npm test` | Build, then run the unit tests (Node's built-in test runner) |
+| `npm test` | Run the unit tests directly on the TypeScript sources (Node's built-in test runner + native TS support) |
 
 ## Security notes
 

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { toJsonPayload } from './payload.js';
+import { toJsonPayload } from './payload.ts';
 
 test('keeps a valid JSON object unchanged', () => {
     const raw = '{"temp":21.5,"unit":"C"}';
