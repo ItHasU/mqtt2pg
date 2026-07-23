@@ -84,9 +84,9 @@ docker build -t mqtt2pg .
 docker run --rm --env-file .env mqtt2pg
 ```
 
-The image is a multi-stage build: TypeScript is compiled in a build stage and
-the runtime image contains only production dependencies and the compiled
-`dist/`. It runs as the unprivileged `node` user.
+The image is a small multi-stage build on `node:24-alpine`: TypeScript is
+compiled in a build stage, and the runtime image contains only production
+dependencies and the compiled `dist/`. It runs as the unprivileged `node` user.
 
 ### Locally with Node.js
 
