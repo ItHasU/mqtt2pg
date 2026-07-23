@@ -35,7 +35,7 @@ TypeScript is on the **7.x** line and the config uses `module`/`moduleResolution
 
 ## Docker / CI
 
-`Dockerfile` is multi-stage (Node 24-slim): a build stage runs `npm ci` + `npm run build`; the runtime stage installs prod deps only (`npm ci --omit=dev`) and runs as the non-root `node` user. `.dockerignore` keeps `node_modules`, `.env`, `dist`, etc. out of the build context.
+`Dockerfile` is multi-stage (Node 24-alpine, for a small image): a build stage runs `npm ci` + `npm run build`; the runtime stage installs prod deps only (`npm ci --omit=dev --ignore-scripts`) and runs as the non-root `node` user. The runtime deps (`mqtt`, `pg`) are pure JS, so Alpine/musl needs no native toolchain. `.dockerignore` keeps `node_modules`, `.env`, `dist`, etc. out of the build context.
 
 `.github/workflows/ci.yml` runs on pushes to `main`: it builds the image and pushes `ithasu/mqtt2pg:latest` to Docker Hub. The TS build runs inside the Dockerfile, so a broken build fails the push — there is no separate test/lint job.
 
