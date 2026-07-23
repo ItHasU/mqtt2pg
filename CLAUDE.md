@@ -4,36 +4,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-`mqtt2pg` is a proof-of-concept that subscribes to MQTT topics and inserts every received message into a PostgreSQL table. The entire application is a single CommonJS file, `main.js` (~70 lines). There is no build step, no test suite, and no linter.
+`mqtt2pg` subscribes to MQTT topics and inserts every received message into a PostgreSQL `history` table. It is a small TypeScript service (`src/`, ~3 files) compiled to `dist/` and shipped as a Docker image. There is no framework and no runtime state beyond the two connections.
 
-## Running
+## Layout
 
-Configuration comes entirely from environment variables (loaded from a `.env` file when run via VS Code or docker-compose):
+- `src/config.ts` — reads and validates env vars; throws `ConfigError` (reported without a stack trace) when one is missing. Exports `loadConfig()` and `redactUrl()` (masks passwords before logging).
+- `src/payload.ts` — `toJsonPayload(raw)`: returns the raw message unchanged if it is already valid JSON, otherwise `JSON.stringify`s it so arbitrary text is stored as a valid JSON string. Pure and unit-tested.
+- `src/main.ts` — entry point: connects to PostgreSQL (a `pg` **Pool**, so concurrent inserts don't serialise on one connection), connects to MQTT, subscribes to `MQTT_TOPICS`, and inserts each message. Handles `SIGINT`/`SIGTERM` for graceful shutdown.
+- `src/payload.test.ts` — Node built-in test runner (`node:test`), run against the compiled JS.
 
-- `MQTT_URL` — MQTT broker URL (e.g. `mqtt://host:1883`)
-- `MQTT_TOPICS` — comma-separated list of topics to subscribe to
-- `DATABASE_URL` — PostgreSQL connection string
+## Commands
 
-Run locally:
 ```bash
-npm install
-node main.js          # requires the three env vars above to be set
+npm ci
+npm run build        # tsc -> dist/
+npm run typecheck    # tsc --noEmit
+npm test             # builds, then: node --test "dist/**/*.test.js"
+npm start            # node dist/main.js  (needs the env vars below)
 ```
 
-Run via Docker (the intended deployment): `docker compose up` uses the prebuilt `ithasu/mqtt2pg:latest` image with an `.env` file. To build locally: `docker build -t mqtt2pg .`
+TypeScript is on the **7.x** line and the config uses `module`/`moduleResolution: nodenext`, so **relative imports must carry a `.js` extension** (e.g. `import { toJsonPayload } from './payload.js'`) even though the sources are `.ts`. Output is CommonJS (no `"type"` in `package.json`). Requires **Node ≥ 24** (`engines`).
 
-## Database expectation
+## Configuration (env vars)
 
-`main.js` writes to a table that must already exist:
-```sql
-INSERT INTO history (topic, payload) VALUES ($1, $2)
-```
-`payload` is expected to be a JSON/JSONB column. The message handler first tries to insert the raw message (assuming it is valid JSON); if that fails it retries wrapping the message as a JSON string (`"<message>"`). There are no migrations in the repo — the `history` table must be created out of band.
+- `MQTT_URL` — broker URL (`mqtt://` or `mqtts://`)
+- `MQTT_TOPICS` — comma-separated topics; MQTT wildcards (`+`, `#`) allowed
+- `DATABASE_URL` — PostgreSQL connection string (supports `sslmode`)
 
-## CI / deployment
+All three are required; missing ones fail fast. The `history` table must already exist (see the DDL in `README.md`) — there are **no migrations** in the repo. `payload` is a `jsonb` column.
 
-`.github/workflows/ci.yml` runs only on pushes to `main`: it builds the Docker image and pushes it to Docker Hub as `ithasu/mqtt2pg:latest`. There is no test or lint job.
+## Docker / CI
 
-## Stale template artifacts (ignore)
+`Dockerfile` is multi-stage (Node 24-slim): a build stage runs `npm ci` + `npm run build`; the runtime stage installs prod deps only (`npm ci --omit=dev`) and runs as the non-root `node` user. `.dockerignore` keeps `node_modules`, `.env`, `dist`, etc. out of the build context.
 
-`package.json` scripts (`clean`, `clean-all`) and `.vscode/tasks.json` reference an `apps/*` / `dagda/*` monorepo layout that does not exist in this repo — they are leftovers from a project template. Only the `mqtt` and `pg` dependencies and `main.js` are real. The `.vscode/launch.json` "mqtt2pg" config is the working way to debug (`program: main.js`, `envFile: .env`).
+`.github/workflows/ci.yml` runs on pushes to `main`: it builds the image and pushes `ithasu/mqtt2pg:latest` to Docker Hub. The TS build runs inside the Dockerfile, so a broken build fails the push — there is no separate test/lint job.
+
+## Debugging
+
+`.vscode/launch.json` ("mqtt2pg") builds via the `npm: build` task then launches `dist/main.js` with `.env`. `.vscode/tasks.json` defines that build task.
