@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "rootDir": "src",
+        "outDir": "dist",
+        "strict": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "declaration": false
+    },
+    "include": ["src/**/*"],
+    // Test files are run directly by Node's built-in TypeScript support
+    // (see `npm test`); they import `.ts` sources and must not be emitted.
+    "exclude": ["**/*.test.ts"]
+}

@@ -4,16 +4,24 @@
   "description": "Forward MQTT messages to PostgreSQL (Proof of Concept)",
   "author": "Matthieu Aubry",
   "license": "MIT",
+  "main": "dist/main.js",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "clean": "rimraf -g apps/*/dist **/.tsc-build",
-    "clean-all": "rimraf -g apps/*/dist **/.tsc-build **/node_modules"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/main.js",
+    "dev": "tsc --watch",
+    "test": "node --test \"src/**/*.test.ts\""
   },
   "devDependencies": {
-    "rimraf": "^5.0.0",
-    "@types/pg": "^8.11.0"
+    "@types/node": "^26.1.1",
+    "@types/pg": "^8.20.0",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
-    "mqtt": "^5.3.5",
-    "pg": "^8.11.3"
+    "mqtt": "^5.15.2",
+    "pg": "^8.22.0"
   }
 }

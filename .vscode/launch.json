@@ -8,18 +8,15 @@
             "type": "node",
             "request": "launch",
             "name": "mqtt2pg",
-            "resolveSourceMapLocations": [
-                "${workspaceFolder}/**",
-                "!**/node_modules/**"
-            ],
+            "preLaunchTask": "npm: build",
             "skipFiles": [
                 "<node_internals>/**"
             ],
             "outFiles": [
-                "${workspaceFolder}/src/main.js",
+                "${workspaceFolder}/dist/**/*.js",
                 "!**/node_modules/**"
             ],
-            "program": "${workspaceFolder}/main.js",
+            "program": "${workspaceFolder}/dist/main.js",
             "envFile": "${workspaceFolder}/.env"
         }
     ]
